@@ -1,0 +1,46 @@
+name: Build docker image
+on:
+  push:
+    branches:
+      - master
+      - main
+
+jobs:
+  build_container:
+    permissions: write-all
+    name: "Build docker container"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Configure Java"
+        uses: actions/setup-java@v3
+        with:
+          java-version: '20'
+          distribution: 'temurin'
+
+      - name: Checkout jNDN
+        uses: actions/checkout@v4
+        with:
+          repository: named-data/jndn
+          ref: refs/heads/master
+
+      - name: Compile and install jNDN
+        run: mvn install
+
+      - name: Check out the main repo
+        uses: actions/checkout@v4
+
+      - name: Compile and Package
+        run: mvn package
+
+      - name: 'Login to GitHub Container Registry'
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ndnappbachelorthesis
+          password: ${{secrets.GITHUB_TOKEN}}
+
+      - name: "Build container"
+        run: |
+          docker build . --tag ghcr.io/ndnappbachelorthesis/ndn-fiware-adapter:latest
+          docker push ghcr.io/ndnappbachelorthesis/ndn-fiware-adapter:latest
+
