@@ -13,7 +13,7 @@ jobs:
       - uses: pixta-dev/repository-mirroring-action@v1
         with:
           target_repo_url:
-            git@git.itm.uni-luebeck.de:arne.matthes/fiware-ndn-adapter.git
+            git@git.itm.uni-luebeck.de:arne.matthes/ndn-link-quality-handler.git
           ssh_private_key:
             ${{ secrets.GITLAB_SSH_PRIVATE_KEY }}
 

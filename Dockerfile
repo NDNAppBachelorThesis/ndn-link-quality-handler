@@ -1,10 +1,9 @@
 FROM openjdk:20
 
-ENV FIWARE_HOST="localhost"
-ENV FIWARE_PORT=1026
-ENV LOG_LEVEL="INFO"
+ENV NDN_HOST="localhost"
+ENV NDN_PORT=6363
 
 WORKDIR /adapter
-ADD target/fiware-ndn-adapter-1.0-jar-with-dependencies.jar /adapter/fiware-ndn-adapter.jar
+ADD target/ndn-link-quality-handler-1.0-jar-with-dependencies.jar /adapter/ndn-link-quality-handler.jar
 
-CMD ["java", "-jar", "fiware-ndn-adapter.jar"]
+CMD ["java", "-jar", "ndn-link-quality-handler.jar"]

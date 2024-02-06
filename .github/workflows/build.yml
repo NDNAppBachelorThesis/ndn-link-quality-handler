@@ -41,6 +41,6 @@ jobs:
 
       - name: "Build container"
         run: |
-          docker build . --tag ghcr.io/ndnappbachelorthesis/ndn-fiware-adapter:latest
-          docker push ghcr.io/ndnappbachelorthesis/ndn-fiware-adapter:latest
+          docker build . --tag ghcr.io/ndnappbachelorthesis/ndn-link-quality-handler:latest
+          docker push ghcr.io/ndnappbachelorthesis/ndn-link-quality-handler:latest
 
