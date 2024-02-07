@@ -1,5 +1,5 @@
-# Fiware NDN Adapter - Connect Fiware-Orion with NDN
+# NDN Link Quality Handler
 
 ## Mirror
-If you are viewing this from a mirror then please visit `https://github.com/NDNAppBachelorThesis/fiware-ndn-adapter` to
+If you are viewing this from a mirror then please visit `https://github.com/NDNAppBachelorThesis/ndn-link-quality-handler` to
 access the build artifacts

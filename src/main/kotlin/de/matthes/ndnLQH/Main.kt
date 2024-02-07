@@ -13,7 +13,16 @@ import net.named_data.jndn.util.Blob
 import java.util.concurrent.atomic.AtomicInteger
 
 var NDN_HOST = System.getenv("NDN_HOST") ?: "localhost"
-var NDN_PORT = System.getenv("NDN_PORT") as Int? ?: 6363
+var NDN_PORT = getEnvAsInt("NDN_PORT") ?: 6363
+
+
+fun getEnvAsInt(name: String): Int? {
+    return try {
+        System.getenv(name).toInt();
+    } catch (e: Exception) {
+        null;
+    }
+}
 
 
 class LinkQualityHandler : OnInterestCallback {
