@@ -9,6 +9,7 @@ import net.named_data.jndn.security.identity.IdentityManager
 import net.named_data.jndn.security.identity.MemoryIdentityStorage
 import net.named_data.jndn.security.identity.MemoryPrivateKeyStorage
 import net.named_data.jndn.transport.TcpTransport
+import net.named_data.jndn.util.Blob
 import java.util.concurrent.atomic.AtomicInteger
 
 var NDN_HOST = System.getenv("NDN_HOST") ?: "localhost"
@@ -24,9 +25,18 @@ class LinkQualityHandler : OnInterestCallback {
         filter: InterestFilter?
     ) {
         println("Link quality for ${interest.name}")
+        try {
+            val deviceId = interest.name[2].toEscapedString().toLong();
+            val response = Data(interest.name)
+            // DO NOT SET TO 0!!! This will result in the device not receiving any data
+            response.metaInfo.freshnessPeriod = 100.0;
+            response.content = Blob("Hallo $deviceId")
+            face.putData(response);
 
-        val response = Data(interest.name)
-        face.putData(response);
+        } catch (e: Exception) {
+            println("LinkQuality packet has wrong format.")
+        }
+
     }
 }
 
