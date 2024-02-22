@@ -62,7 +62,7 @@ class DiscoveryHandler : OnInterestCallback {
         }
         val name = Name("/esp/discovery/$NDN_ID/1")
         val data = Data(name)
-        data.metaInfo.freshnessPeriod = 100.0
+        data.metaInfo.freshnessPeriod = 1000.0
 
         face.putData(data)
     }
