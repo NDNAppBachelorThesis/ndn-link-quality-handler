@@ -21,6 +21,9 @@ var NDN_ID = getEnvAsInt("NDN_ID")
 // Maps deviceId -> List[received timestamps]
 val linkQualityMap = mutableMapOf<Long, LinkQuality>();
 
+/**
+ * Tries to get an ENV and converts it to an int if possible
+ */
 fun getEnvAsInt(name: String): Int? {
     return try {
         System.getenv(name).toInt();
@@ -29,7 +32,9 @@ fun getEnvAsInt(name: String): Int? {
     }
 }
 
-
+/**
+ * Stores the link quality for a single device
+ */
 class LinkQuality(val timestamps: MutableList<Long>, var lastUpdateTime: Long) {
     fun calculateLinkQuality(): Float {
         if (timestamps.size < 2) {
@@ -47,6 +52,9 @@ class LinkQuality(val timestamps: MutableList<Long>, var lastUpdateTime: Long) {
 }
 
 
+/**
+ * Responds to '/esp/discovery' Interest packets
+ */
 class DiscoveryHandler : OnInterestCallback {
     override fun onInterest(
         prefix: Name,
@@ -60,15 +68,17 @@ class DiscoveryHandler : OnInterestCallback {
             println("  -> Already answered. Skipping!")
             return
         }
-        val name = Name("/esp/discovery/$NDN_ID/1")
+        val name = Name("/esp/discovery/$NDN_ID/1") // '/1' to identify this node as a NFD
         val data = Data(name)
         data.metaInfo.freshnessPeriod = 1000.0
 
         face.putData(data)
     }
 
+    /**
+     * Checks if the device ID is in the packets name to determine if this interest was already responded to
+     */
     fun shouldRespondToDiscovery(name: Name): Boolean {
-
         for (i in 2..<name.size()) {
             val id = ByteBuffer.wrap(ByteArray(8) { name[i].value.buf()[it] }.reversedArray()).getLong()
             if (id.toString() == "$NDN_ID") {
@@ -82,6 +92,9 @@ class DiscoveryHandler : OnInterestCallback {
 }
 
 
+/**
+ * NDN handler to respond to '/esp/linkqualitycheck' Interest packets
+ */
 class LinkQualityCheckHandler : OnInterestCallback {
     override fun onInterest(
         prefix: Name,
@@ -93,7 +106,8 @@ class LinkQualityCheckHandler : OnInterestCallback {
 //        println("Link quality for ${interest.name}")
         try {
             val deviceId = interest.name[2].toEscapedString().toLong();
-            val timestamp = ByteBuffer.wrap(ByteArray(8) { interest.name[3].value.buf()[it] }.reversedArray()).getLong();
+            val timestamp =
+                ByteBuffer.wrap(ByteArray(8) { interest.name[3].value.buf()[it] }.reversedArray()).getLong();
 
             if (!linkQualityMap.containsKey(deviceId)) {
                 linkQualityMap[deviceId] = LinkQuality(mutableListOf(), 0)
@@ -114,6 +128,9 @@ class LinkQualityCheckHandler : OnInterestCallback {
 }
 
 
+/**
+ * NDN handler to respond to '/esp/<deviceId>/linkquality' requests
+ */
 class LinkQualityHandler : OnInterestCallback {
     override fun onInterest(
         prefix: Name,
@@ -126,7 +143,7 @@ class LinkQualityHandler : OnInterestCallback {
 
         // Remove outdated entries
         val toRemove = mutableListOf<Long>()
-        linkQualityMap.forEach {id, quality ->
+        linkQualityMap.forEach { id, quality ->
             if (System.currentTimeMillis() - quality.lastUpdateTime > 1000 * 60 * 60) {     // 1 hour
                 toRemove.add(id)
             }
@@ -138,7 +155,7 @@ class LinkQualityHandler : OnInterestCallback {
         val buffer = ByteBuffer.allocate(12 * linkQualityMap.size)
         var i = 0
 
-        linkQualityMap.forEach {id, quality ->
+        linkQualityMap.forEach { id, quality ->
             buffer.put(12 * i, longToByteArray(id))
             buffer.put(12 * i + 8, floatToByteArray(quality.calculateLinkQuality()))
             i++
@@ -167,17 +184,23 @@ class LinkQualityHandler : OnInterestCallback {
 }
 
 
+/**
+ * The Interest handler for the periodic link quality Interest packets
+ */
 class AutoSendLinkQualityHandler : OnData, OnTimeout {
     override fun onData(interest: Interest?, data: Data?) {
-        print("Data")
+        println("Data. This should never happen.")
     }
 
     override fun onTimeout(interest: Interest?) {
-        print("Timeout")
+        println("Timeout")
     }
 }
 
 
+/**
+ * Builds a keychain for signing NDN packets
+ */
 fun buildTestKeyChain(): KeyChain {
     val identityStorage = MemoryIdentityStorage()
     val privateKeyStorage = MemoryPrivateKeyStorage()
@@ -193,6 +216,9 @@ fun buildTestKeyChain(): KeyChain {
 }
 
 
+/**
+ * Registers the discovery handler to NFD
+ */
 fun registerDiscoveryHandler(face: Face, runningCounter: AtomicInteger) {
     val nameObj = Name("/esp/discovery")
     val handler = DiscoveryHandler()
@@ -210,7 +236,9 @@ fun registerDiscoveryHandler(face: Face, runningCounter: AtomicInteger) {
     )
 }
 
-
+/**
+ * Registers the link quality check handler to NFD
+ */
 fun registerLinkQualityCheckHandler(face: Face, runningCounter: AtomicInteger) {
     val nameObj = Name("/esp/linkqualitycheck")
     val handler = LinkQualityCheckHandler()
@@ -228,7 +256,9 @@ fun registerLinkQualityCheckHandler(face: Face, runningCounter: AtomicInteger) {
     )
 }
 
-
+/**
+ * Registers the link quality handler to NFD
+ */
 fun registerLinkQualityHandler(face: Face, runningCounter: AtomicInteger) {
     val nameObj = Name("/esp/$NDN_ID/linkquality")
     val handler = LinkQualityHandler()
@@ -247,6 +277,9 @@ fun registerLinkQualityHandler(face: Face, runningCounter: AtomicInteger) {
 }
 
 
+/**
+ * Sends the periodic link quality check Interest packets to the neighbors
+ */
 fun sendLinkQualityMessage(face: Face) {
     val name = Name("/esp/linkqualitycheck/$NDN_ID")
     val buffer = ByteBuffer.allocate(8)
