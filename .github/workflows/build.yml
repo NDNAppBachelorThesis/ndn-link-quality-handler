@@ -10,6 +10,8 @@ jobs:
     permissions: write-all
     name: "Build docker container"
     runs-on: ubuntu-latest
+    # Job is currently disabled
+    if: false
     steps:
       - name: "Configure Java"
         uses: actions/setup-java@v3
